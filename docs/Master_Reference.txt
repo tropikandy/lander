@@ -1,0 +1,44 @@
+==============================================================================
+MASTER REFERENCE: ORACLE SERVER (suras.org)
+==============================================================================
+
+[SERVER DETAILS]
+IP Address:       79.76.50.122
+SSH User:         ubuntu
+SSH Key Path:     C:\Users\Tropi\.ssh\oracle_key.pem
+Region:           Stockholm (eu-stockholm-1)
+Specs:            4 OCPU / 24GB RAM (ARM64)
+
+[URLS]
+Automation Hub:   https://automation.suras.org  (Public)
+Dockge Admin:     http://<TAILSCALE-IP>:5001      (Private VPN only)
+Qdrant API:       http://<TAILSCALE-IP>:6333      (Private VPN only)
+
+[CREDENTIALS - SAVED IN CONFIG]
+Postgres User:    apuser
+Postgres Pass:    TropiDBPassword2026!
+JWT Secret:       TropiSecureSecret2026!
+
+[DEPLOYMENT INSTRUCTIONS]
+1. Open PowerShell on Windows.
+2. Fix Key Permissions (Run once):
+   icacls "C:\Users\Tropi\.ssh\oracle_key.pem" /reset
+   icacls "C:\Users\Tropi\.ssh\oracle_key.pem" /grant:r "$($env:USERNAME):R"
+   icacls "C:\Users\Tropi\.ssh\oracle_key.pem" /inheritance:r
+
+3. Upload Script:
+   scp -i "C:\Users\Tropi\.ssh\oracle_key.pem" .\setup.sh ubuntu@79.76.50.122:/home/ubuntu/
+
+4. Connect & Run:
+   ssh -i "C:\Users\Tropi\.ssh\oracle_key.pem" ubuntu@79.76.50.122
+   chmod +x setup.sh
+   sudo ./setup.sh
+
+5. Authenticate Tailscale:
+   (The script will give you a URL. Copy/Paste it into your browser).
+
+6. Deploy Stack:
+   - Go to http://<TAILSCALE-IP>:5001
+   - Click "+ Compose", name it "automation".
+   - Paste the content of "compose.yaml".
+   - Click Deploy.

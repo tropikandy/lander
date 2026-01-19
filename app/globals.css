@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* OBSIDIAN (Default Dark) - Slate/Charcoal */
+    --bg-app: #020617; /* Slate 950 */
+    --bg-card: #0f172a; /* Slate 900 */
+    --bg-card-hover: #1e293b; /* Slate 800 */
+    
+    --text-primary: #f8fafc; /* Slate 50 */
+    --text-secondary: #94a3b8; /* Slate 400 */
+    --text-muted: #64748b; /* Slate 500 */
+    
+    --accent-primary: #818cf8; /* Indigo 400 */
+    --accent-glow: rgba(129, 140, 248, 0.15);
+    
+    --border-subtle: #1e293b;
+    --border-active: #334155;
+    
+    --chart-line: #818cf8;
+    --chart-bg: rgba(129, 140, 248, 0.1);
+  }
+
+  [data-theme='ceramic'] {
+    /* CERAMIC (Light) - Zinc/Platinum */
+    --bg-app: #f4f4f5; /* Zinc 100 */
+    --bg-card: #ffffff; /* White */
+    --bg-card-hover: #fafafa; /* Zinc 50 */
+    
+    --text-primary: #18181b; /* Zinc 900 */
+    --text-secondary: #52525b; /* Zinc 600 */
+    --text-muted: #a1a1aa; /* Zinc 400 */
+    
+    --accent-primary: #4f46e5; /* Indigo 600 */
+    --accent-glow: rgba(79, 70, 229, 0.1);
+    
+    --border-subtle: #e4e4e7; /* Zinc 200 */
+    --border-active: #d4d4d8; /* Zinc 300 */
+    
+    --chart-line: #4f46e5;
+    --chart-bg: rgba(79, 70, 229, 0.05);
+  }
+
+  [data-theme='cosmic'] {
+    /* COSMIC (Deep) - Navy/Midnight */
+    --bg-app: #0B1120; /* Deep Navy */
+    --bg-card: #151e32; /* Lighter Navy */
+    --bg-card-hover: #1e2944;
+    
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    
+    --accent-primary: #38bdf8; /* Sky 400 */
+    --accent-glow: rgba(56, 189, 248, 0.15);
+    
+    --border-subtle: #1e293b;
+    --border-active: #334155;
+    
+    --chart-line: #38bdf8;
+    --chart-bg: rgba(56, 189, 248, 0.1);
   }
 }
 
+@theme inline {
+  --font-sans: var(--font-inter);
+  
+  --color-background: var(--bg-app);
+  --color-card: var(--bg-card);
+  --color-card-hover: var(--bg-card-hover);
+  
+  --color-text-main: var(--text-primary);
+  --color-text-dim: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  
+  --color-primary: var(--accent-primary);
+  --color-border: var(--border-subtle);
+  
+  --color-chart-line: var(--chart-line);
+  --color-chart-bg: var(--chart-bg);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Subtle Noise Texture for tactile feel */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
