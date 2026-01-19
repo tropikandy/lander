@@ -5,8 +5,12 @@ import { TopographicWave } from "./TopographicWave";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
-export const LandingHero = ({ onEnter }: { onEnter: () => void }) => {
+export const LandingHero = ({ onEnter }: { onEnter: (query?: string) => void }) => {
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleEnter = () => {
+    onEnter(searchQuery);
+  };
 
   return (
     <div className="relative w-full h-screen bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20 p-8 flex items-center justify-center overflow-hidden">
@@ -20,7 +24,7 @@ export const LandingHero = ({ onEnter }: { onEnter: () => void }) => {
             <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
               <div className="w-3 h-3 bg-black rounded-full" />
             </div>
-            TEMPLATE<span className="font-light">DSGN</span>
+            SURAS<span className="font-light">OS</span>
           </div>
 
           {/* Nav */}
@@ -35,7 +39,7 @@ export const LandingHero = ({ onEnter }: { onEnter: () => void }) => {
           {/* Actions */}
           <div className="flex items-center gap-6">
             <button 
-              onClick={onEnter}
+              onClick={() => handleEnter()}
               className="bg-[#4F46E5] hover:bg-[#4338ca] text-white px-8 py-2 rounded-full text-xs font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(79,70,229,0.5)]"
             >
               SIGN IN
@@ -73,13 +77,14 @@ export const LandingHero = ({ onEnter }: { onEnter: () => void }) => {
                 placeholder="Find a service..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
               />
             </motion.div>
 
             {/* Buttons */}
             <div className="flex gap-6 pt-4">
               <button 
-                onClick={onEnter}
+                onClick={() => handleEnter()}
                 className="bg-[#38bdf8] hover:bg-[#0ea5e9] text-black px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all"
               >
                 Free Trial
@@ -108,7 +113,7 @@ export const LandingHero = ({ onEnter }: { onEnter: () => void }) => {
                 Landing page.
               </h3>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+                Your gateway to the SURAS ecosystem. Monitor infrastructure, manage media automation, and deploy AI services from a unified command center.
               </p>
             </motion.div>
           </div>
@@ -122,7 +127,7 @@ export const LandingHero = ({ onEnter }: { onEnter: () => void }) => {
         <div className="absolute bottom-8 flex justify-center w-full">
             <div className="bg-[#1a1a1a] rounded-full px-6 py-2 flex items-center gap-2 border border-white/10">
                 <Globe className="w-4 h-4 text-white" />
-                <span className="text-white text-sm">fity.club</span>
+                <span className="text-white text-sm">suras.org</span>
             </div>
         </div>
 

@@ -8,13 +8,22 @@ import { Server, Layers } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function ServiceDeck() {
+interface ServiceDeckProps {
+  filter?: string;
+}
+
+export function ServiceDeck({ filter = "" }: ServiceDeckProps) {
   const { data, isLoading } = useSWR('/api/services/list', fetcher);
   
   const services: ServiceStatus[] = data?.services || [];
 
+  // Filter services
+  const filteredServices = services.filter(service => 
+    service.name.toLowerCase().includes(filter.toLowerCase())
+  );
+
   // Group services dynamically
-  const grouped = services.reduce((acc, service) => {
+  const grouped = filteredServices.reduce((acc, service) => {
     const group = service.group || 'Other';
     if (!acc[group]) acc[group] = [];
     acc[group].push(service);
@@ -38,6 +47,8 @@ export function ServiceDeck() {
       <CardContent className="space-y-6">
         {isLoading ? (
           <div className="text-xs text-text-muted px-2">Scanning infrastructure...</div>
+        ) : groupNames.length === 0 ? (
+          <div className="text-xs text-text-muted px-2 py-4 text-center">No services found matching "{filter}"</div>
         ) : (
           groupNames.map((group) => (
             <div key={group} className="space-y-2">

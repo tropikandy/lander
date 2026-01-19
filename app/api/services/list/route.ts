@@ -1,23 +1,61 @@
 import { NextResponse } from 'next/server';
 import { ServiceStatus } from '@/lib/types/services';
 
-const MOCK_SERVICES: ServiceStatus[] = [
-  // Infrastructure
-  { id: 'dockge', name: 'Dockge', group: 'Core', image: 'louislam/dockge', status: 'running', uptime: '9d', ports: ['5001'] },
-  { id: 'cloudflared', name: 'Tunnel', group: 'Core', image: 'cloudflare/cloudflared', status: 'running', uptime: '9d', ports: [] },
-  { id: 'vaultwarden', name: 'Vault', group: 'Core', image: 'vaultwarden/server', status: 'running', uptime: '9d', ports: ['80'] },
-
-  // Automation / Data
-  { id: 'activepieces', name: 'Activepieces', group: 'Automation', image: 'activepieces/activepieces', status: 'running', uptime: '9d', ports: ['8080'] },
-  { id: 'qdrant', name: 'Qdrant Vector', group: 'Automation', image: 'qdrant/qdrant', status: 'running', uptime: '9d', ports: ['6333'] },
-  
-  // Media (The "Ghost" App)
-  { id: 'dispatcharr', name: 'Dispatcharr', group: 'Media', image: 'dispatcharr/app', status: 'error', uptime: '0m', ports: ['9191'] },
-  
-  // Example of a "Random App" added later
-  { id: 'minecraft', name: 'Survival Server', group: 'Gaming', image: 'itzg/minecraft-server', status: 'stopped', uptime: '0m', ports: ['25565'] },
-];
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  return NextResponse.json({ services: MOCK_SERVICES });
+  try {
+    // Connect to InfraGem internal API
+    const res = await fetch('http://infragem:9999/api/state', {
+      next: { revalidate: 10 },
+      cache: 'no-store'
+    });
+    
+    if (!res.ok) {
+        throw new Error(`InfraGem API error: ${res.status}`);
+    }
+
+    const state = await res.json();
+    const containers = state.containers || [];
+
+    const services: ServiceStatus[] = containers.map((c: any) => {
+      let group = 'Other';
+      const name = c.name.toLowerCase();
+
+      if (['sonarr', 'radarr', 'prowlarr', 'plex', 'jellyfin', 'overseerr'].some(k => name.includes(k))) {
+        group = 'Media';
+      } else if (['automation', 'activepieces', 'webhook', 'n8n'].some(k => name.includes(k))) {
+        group = 'Automation';
+      } else if (['dockge', 'portainer', 'gitea', 'vaultwarden', 'infragem', 'cloudflared'].some(k => name.includes(k))) {
+        group = 'Core';
+      } else if (['uptime-kuma', 'grafana', 'prometheus'].some(k => name.includes(k))) {
+        group = 'Monitoring';
+      }
+
+      // Format uptime (e.g., "Up 2 hours") -> "2h"
+      let uptime = c.status.replace('Up ', '').split(' ')[0];
+      if (uptime.includes('hours')) uptime = uptime.replace('hours', 'h');
+      if (uptime.includes('minutes')) uptime = uptime.replace('minutes', 'm');
+      if (uptime.includes('days')) uptime = uptime.replace('days', 'd');
+
+      // Extract ports
+      const ports = c.ports ? c.ports.map((p: any) => p.host_port).filter(Boolean) : [];
+
+      return {
+        id: c.id,
+        name: c.name,
+        group,
+        image: c.image,
+        status: c.state === 'running' ? 'running' : 'stopped',
+        uptime: uptime,
+        ports: ports
+      };
+    });
+
+    return NextResponse.json({ services });
+  } catch (error) {
+    console.error('Failed to fetch services from InfraGem:', error);
+    // Fallback to empty list or error state, don't break UI
+    return NextResponse.json({ services: [] });
+  }
 }

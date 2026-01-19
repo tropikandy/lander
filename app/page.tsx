@@ -12,6 +12,12 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export default function Home() {
   const [showDashboard, setShowDashboard] = useState(false);
+  const [searchFilter, setSearchFilter] = useState("");
+
+  const handleEnter = (query?: string) => {
+    if (query) setSearchFilter(query);
+    setShowDashboard(true);
+  };
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
@@ -23,7 +29,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="w-full h-full"
           >
-            <LandingHero onEnter={() => setShowDashboard(true)} />
+            <LandingHero onEnter={handleEnter} />
           </motion.div>
         ) : (
           <motion.div
@@ -46,7 +52,7 @@ export default function Home() {
               <AICortex />
 
               {/* Panel D: Services */}
-              <ServiceDeck />
+              <ServiceDeck filter={searchFilter} />
 
             </GridContainer>
           </motion.div>
