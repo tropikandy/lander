@@ -47,6 +47,9 @@ export const ConnectivityGraph = () => {
     // Automation
     { id: 'automation', label: 'Automation', type: 'service', x: 50, y: 90, icon: Server, status: mesh?.infragem?.automation === 'connected' ? 'online' : 'offline' },
     { id: 'ollama', label: 'Ollama', type: 'service', x: 70, y: 90, icon: Activity, status: mesh?.infragem?.ollama === 'connected' ? 'online' : 'offline' },
+    
+    // Local Home
+    { id: 'home-assistant', label: 'Home Engine', type: 'core', x: 20, y: 90, icon: Activity, status: mesh?.infragem?.['home-assistant'] === 'connected' ? 'online' : 'offline' },
   ];
 
   // 2. Define Connections based on Mesh Data
@@ -64,6 +67,7 @@ export const ConnectivityGraph = () => {
     { from: 'cloudflare', to: 'infragem', active: isConnected('infragem', 'cloudflare') },
     { from: 'infragem', to: 'automation', active: isConnected('infragem', 'automation') },
     { from: 'infragem', to: 'ollama', active: isConnected('infragem', 'ollama') },
+    { from: 'infragem', to: 'home-assistant', active: isConnected('infragem', 'home-assistant') },
   ];
 
   return (
