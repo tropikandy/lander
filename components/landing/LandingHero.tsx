@@ -29,11 +29,11 @@ export const LandingHero = ({ onEnter }: { onEnter: (query?: string) => void }) 
 
           {/* Nav */}
           <nav className="hidden md:flex gap-8 text-xs font-medium text-gray-400 tracking-widest">
-            <a href="#" className="hover:text-white transition-colors">ABOUT</a>
-            <a href="#" className="hover:text-white transition-colors">DOWNLOAD</a>
-            <a href="#" className="hover:text-white transition-colors">PRICING</a>
-            <a href="#" className="hover:text-white transition-colors">FEATURES</a>
-            <a href="#" className="hover:text-white transition-colors">CONTACT</a>
+            <a href="/history" className="hover:text-white transition-colors">HISTORY</a>
+            <a href="/integrations" className="hover:text-white transition-colors">INTEGRATIONS</a>
+            <a href="/setup" className="hover:text-white transition-colors">SETUP</a>
+            <a href="/map" className="hover:text-white transition-colors">TOPOLOGY</a>
+            <a href="mailto:admin@suras.org" className="hover:text-white transition-colors">SUPPORT</a>
           </nav>
 
           {/* Actions */}
@@ -87,10 +87,13 @@ export const LandingHero = ({ onEnter }: { onEnter: (query?: string) => void }) 
                 onClick={() => handleEnter()}
                 className="bg-[#38bdf8] hover:bg-[#0ea5e9] text-black px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all"
               >
-                Free Trial
+                Enter Dashboard
               </button>
-              <button className="border border-gray-600 hover:border-white text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all">
-                see more
+              <button 
+                onClick={() => document.getElementById('service-deck')?.scrollIntoView({ behavior: 'smooth' })}
+                className="border border-gray-600 hover:border-white text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all"
+              >
+                see services
               </button>
             </div>
           </div>

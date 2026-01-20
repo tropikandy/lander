@@ -38,7 +38,7 @@ export function ServiceDeck({ filter = "" }: ServiceDeckProps) {
   });
 
   return (
-    <Card className="col-span-1 md:col-span-3">
+    <Card id="service-deck" className="col-span-1 md:col-span-3 scroll-mt-24">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Server className="w-4 h-4 text-text-dim" /> SERVICE DECK

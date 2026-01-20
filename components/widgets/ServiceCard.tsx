@@ -34,7 +34,14 @@ export function ServiceCard({ service }: { service: ServiceStatus }) {
             service.status === 'running' ? "bg-emerald-500/50" : "bg-slate-700"
         )}></div>
         <div>
-          <div className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors capitalize">{service.name}</div>
+          <a 
+            href={`https://${service.name.toLowerCase()}.suras.org`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors capitalize hover:underline underline-offset-4 decoration-primary/50"
+          >
+            {service.name}
+          </a>
           <div className="text-[10px] text-slate-500 font-mono opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1 group-hover:translate-y-0 duration-300">
              {service.uptime ? `Uptime: ${service.uptime}` : 'Offline'}
           </div>
