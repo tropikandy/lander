@@ -29,6 +29,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Git sync initiated' });
     }
 
+    if (action === 'security_audit') {
+        // Run drift detection
+        const res = await fetch('http://infragem:9999/api/drift');
+        if (!res.ok) throw new Error('Drift API unreachable');
+        
+        const data = await res.json();
+        const driftCount = data.drift_detections?.length || 0;
+        
+        if (driftCount === 0) {
+            return NextResponse.json({ success: true, message: 'Audit Clean: State matches Intent' });
+        } else {
+            return NextResponse.json({ success: true, message: `Drift Detected: ${driftCount} changes found` });
+        }
+    }
+
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
   } catch (error) {
