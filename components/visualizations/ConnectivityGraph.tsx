@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { Server, Database, Cloud, Shield, Activity, Lock, GitBranch } from "lucide-react";
 import useSWR from "swr";
-import { useMemo } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -24,40 +23,45 @@ interface Edge {
   from: string;
   to: string;
   active: boolean;
+  status?: 'connected' | 'disconnected';
 }
 
 export const ConnectivityGraph = () => {
-  const { data: servicesData } = useSWR('/api/services/list', fetcher);
+  const { data: mesh } = useSWR('/api/system/mesh', fetcher, { refreshInterval: 5000 });
   
   // 1. Define Nodes (Topological Layout)
-  // We'll place InfraGem in the center
   const nodes: Node[] = [
     { id: 'infragem', label: 'InfraGem Core', type: 'core', x: 50, y: 50, icon: Activity, status: 'online' },
     
     // Cloud / External
-    { id: 'github', label: 'GitHub', type: 'cloud', x: 50, y: 10, icon: Cloud, status: 'online' },
-    { id: 'cloudflare', label: 'Cloudflare', type: 'cloud', x: 80, y: 10, icon: Cloud, status: 'online' },
+    { id: 'github', label: 'GitHub', type: 'cloud', x: 50, y: 10, icon: Cloud, status: mesh?.infragem?.github === 'connected' ? 'online' : 'offline' },
+    { id: 'cloudflare', label: 'Cloudflare', type: 'cloud', x: 80, y: 10, icon: Cloud, status: mesh?.infragem?.cloudflare === 'connected' ? 'online' : 'offline' },
     
     // Security / Auth
-    { id: 'vault', label: 'Vaultwarden', type: 'security', x: 20, y: 30, icon: Lock, status: 'online' },
+    { id: 'vault', label: 'Vaultwarden', type: 'security', x: 20, y: 30, icon: Lock, status: mesh?.infragem?.vault === 'connected' ? 'online' : 'offline' },
     
     // DevOps
-    { id: 'gitea', label: 'Gitea', type: 'service', x: 20, y: 70, icon: GitBranch, status: 'online' },
-    { id: 'dockge', label: 'Dockge', type: 'service', x: 80, y: 70, icon: Server, status: 'online' },
+    { id: 'gitea', label: 'Gitea', type: 'service', x: 20, y: 70, icon: GitBranch, status: mesh?.infragem?.gitea === 'connected' ? 'online' : 'offline' },
+    { id: 'dockge', label: 'Dockge', type: 'service', x: 80, y: 70, icon: Server, status: mesh?.infragem?.dockge === 'connected' ? 'online' : 'offline' },
     
     // Automation
-    { id: 'automation', label: 'Automation', type: 'service', x: 50, y: 90, icon: Server, status: 'online' },
+    { id: 'automation', label: 'Automation', type: 'service', x: 50, y: 90, icon: Server, status: mesh?.infragem?.automation === 'connected' ? 'online' : 'offline' },
   ];
 
-  // 2. Define Connections (Who talks to whom?)
+  // 2. Define Connections based on Mesh Data
+  // Default to false/disconnected if no data
+  const isConnected = (from: string, to: string) => {
+      if (!mesh) return false;
+      return mesh[from]?.[to] === 'connected' || mesh[to]?.[from] === 'connected';
+  };
+
   const edges: Edge[] = [
-    { from: 'github', to: 'infragem', active: true }, // Polling
-    { from: 'infragem', to: 'gitea', active: true }, // Management
-    { from: 'infragem', to: 'dockge', active: true }, // Management
-    { from: 'vault', to: 'infragem', active: true }, // Secrets
-    { from: 'cloudflare', to: 'infragem', active: true }, // Tunnel
-    { from: 'infragem', to: 'automation', active: true }, // Orchestration
-    { from: 'github', to: 'gitea', active: false }, // Mirroring (Future)
+    { from: 'github', to: 'infragem', active: isConnected('infragem', 'github') },
+    { from: 'infragem', to: 'gitea', active: isConnected('infragem', 'gitea') },
+    { from: 'infragem', to: 'dockge', active: isConnected('infragem', 'dockge') },
+    { from: 'vault', to: 'infragem', active: isConnected('infragem', 'vault') },
+    { from: 'cloudflare', to: 'infragem', active: isConnected('infragem', 'cloudflare') },
+    { from: 'infragem', to: 'automation', active: isConnected('infragem', 'automation') },
   ];
 
   return (
@@ -81,14 +85,15 @@ export const ConnectivityGraph = () => {
 
           return (
             <g key={`${edge.from}-${edge.to}`}>
-              {/* Base Line */}
+              {/* Base Line - Red if inactive, Slate if active but waiting, Greenish if flowing */}
               <line
                 x1={`${start.x}%`}
                 y1={`${start.y}%`}
                 x2={`${end.x}%`}
                 y2={`${end.y}%`}
-                stroke="#1e293b"
+                stroke={edge.active ? "#1e293b" : "#450a0a"} 
                 strokeWidth="2"
+                strokeDasharray={edge.active ? "0" : "5,5"}
               />
               
               {/* Active Data Packet Animation */}
@@ -117,10 +122,18 @@ export const ConnectivityGraph = () => {
       {/* Nodes Layer */}
       {nodes.map((node) => {
         const Icon = node.icon;
-        const colorClass = node.type === 'core' ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/50' : 
-                           node.type === 'cloud' ? 'text-sky-400 bg-sky-500/10 border-sky-500/50' :
-                           node.type === 'security' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/50' :
-                           'text-slate-400 bg-slate-500/10 border-slate-500/50';
+        
+        // Dynamic color based on status
+        let colorClass = 'text-slate-400 bg-slate-500/10 border-slate-500/50';
+        if (node.status === 'offline') {
+            colorClass = 'text-red-400 bg-red-500/10 border-red-500/50';
+        } else if (node.type === 'core') {
+            colorClass = 'text-indigo-400 bg-indigo-500/10 border-indigo-500/50';
+        } else if (node.type === 'cloud') {
+            colorClass = 'text-sky-400 bg-sky-500/10 border-sky-500/50';
+        } else if (node.type === 'security') {
+            colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/50';
+        }
 
         return (
           <motion.div
@@ -145,6 +158,11 @@ export const ConnectivityGraph = () => {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </span>
               )}
+              {node.status === 'offline' && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              )}
             </div>
             <span className="text-xs font-bold tracking-widest">{node.label}</span>
             <span className="text-[10px] opacity-60 uppercase">{node.type}</span>
@@ -160,8 +178,8 @@ export const ConnectivityGraph = () => {
             <span>Active Connections</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-            <div className="w-2 h-2 rounded-full bg-slate-700" />
-            <span>Idle / Disconnected</span>
+            <div className="w-2 h-2 rounded-full bg-red-900 border border-red-500" />
+            <span>Disconnected / Error</span>
         </div>
       </div>
     </div>
