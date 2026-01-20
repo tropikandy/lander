@@ -1,12 +1,13 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Terminal, Database, RefreshCw, Shield, Loader2 } from "lucide-react";
+import { Terminal, Network, RefreshCw, Shield, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 const ACTIONS = [
-  { id: 'backup_system', name: 'Backup System', icon: Database, desc: 'Snapshot config' },
+  { id: 'nav_map', name: 'Connectivity Map', icon: Network, desc: 'View topology' },
   { id: 'restart_stacks', name: 'Reload Stacks', icon: RefreshCw, desc: 'Restart containers' },
   { id: 'git_sync', name: 'Git Sync', icon: Terminal, desc: 'Pull latest' },
   { id: 'security_audit', name: 'Security Audit', icon: Shield, desc: 'Scan vulnerabilities' },
@@ -14,8 +15,14 @@ const ACTIONS = [
 
 export function OpsActions() {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleTrigger = async (id: string) => {
+    if (id === 'nav_map') {
+        router.push('/map');
+        return;
+    }
+
     setLoadingId(id);
     try {
         await fetch('/api/services/control', {
