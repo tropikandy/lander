@@ -1,21 +1,26 @@
 import { NextResponse } from 'next/server';
-import { auth } from "@/auth";
 
 export async function POST(req: Request) {
-  const session = await auth();
+  try {
+    const body = await req.json();
+    const { intentId } = body;
 
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let targetUrl = 'http://infragem:9999/api/drift';
+    
+    if (intentId === 'system_check') {
+        targetUrl = 'http://infragem:9999/api/drift';
+    } else if (intentId === 'media_sync') {
+        targetUrl = 'http://infragem:9999/api/reconcile/execute';
+    } else if (intentId === 'energy_save') {
+        // Example: Scale down non-essential containers
+        return NextResponse.json({ success: true, message: 'Energy mode enabled (Simulation)' });
+    }
+
+    const res = await fetch(targetUrl, { method: 'POST' });
+    const data = await res.json();
+
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return NextResponse.json({ error: 'System Error' }, { status: 500 });
   }
-
-  const body = await req.json();
-  const { intentId } = body;
-
-  console.log(`[AUDIT] User ${session.user?.name} triggered intent: ${intentId}`);
-
-  // TODO: In production, fetch the Webhook URL from the Activepieces config or DB
-  // const webhookUrl = getWebhookForIntent(intentId);
-  // await fetch(webhookUrl, { method: 'POST' });
-
-  return NextResponse.json({ success: true, message: `Intent ${intentId} activated` });
 }

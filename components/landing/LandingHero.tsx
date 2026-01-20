@@ -110,10 +110,10 @@ export const LandingHero = ({ onEnter }: { onEnter: (query?: string) => void }) 
                  <Globe className="w-12 h-12 text-purple-400" />
               </div>
               <h3 className="text-3xl text-white font-light mb-4">
-                Landing page.
+                Autonomous Ops.
               </h3>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Your gateway to the SURAS ecosystem. Monitor infrastructure, manage media automation, and deploy AI services from a unified command center.
+                SURAS OS leverages local AI to monitor, heal, and optimize your cloud infrastructure. Real-time drift detection and automated recovery keep your services running 24/7.
               </p>
             </motion.div>
           </div>
