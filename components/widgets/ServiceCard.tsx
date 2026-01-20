@@ -20,6 +20,22 @@ export function ServiceCard({ service }: { service: ServiceStatus }) {
     }
   };
 
+  const getServiceUrl = (name: string) => {
+    const mapping: Record<string, string> = {
+        'silverbullet': 'wiki.suras.org',
+        'stirling-pdf': 'pdf.suras.org',
+        'actual-budget': 'money.suras.org',
+        'home-assistant': 'home.suras.org',
+        'gem-landing': 'suras.org',
+        'infragem': 'infra.suras.org',
+        'activepieces': 'automation.suras.org',
+        'gitea': 'git.suras.org',
+        'vaultwarden': 'vault.suras.org'
+    };
+    const domain = mapping[name.toLowerCase()] || `${name.toLowerCase()}.suras.org`;
+    return `https://${domain}`;
+  };
+
   const statusColor = {
     running: 'text-emerald-400',
     stopped: 'text-slate-500',
@@ -35,7 +51,7 @@ export function ServiceCard({ service }: { service: ServiceStatus }) {
         )}></div>
         <div>
           <a 
-            href={`https://${service.name.toLowerCase()}.suras.org`} 
+            href={getServiceUrl(service.name)} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors capitalize hover:underline underline-offset-4 decoration-primary/50"

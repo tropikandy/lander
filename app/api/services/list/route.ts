@@ -22,21 +22,15 @@ export async function GET() {
       let group = 'Other';
       const name = c.name.toLowerCase();
 
-            if (['sonarr', 'radarr', 'prowlarr', 'plex', 'jellyfin', 'overseerr'].some(k => name.includes(k))) {
-
-              group = 'Media';
-
-            } else if (['automation', 'activepieces', 'webhook', 'n8n', 'ollama'].some(k => name.includes(k))) {
-
-              group = 'Automation';
-
-            } else if (['dockge', 'portainer', 'gitea', 'vaultwarden', 'infragem', 'cloudflared'].some(k => name.includes(k))) {
-
-              group = 'Core';
-
-            }
-
-       else if (['uptime-kuma', 'grafana', 'prometheus'].some(k => name.includes(k))) {
+      if (['sonarr', 'radarr', 'prowlarr', 'plex', 'jellyfin', 'overseerr'].some(k => name.includes(k))) {
+        group = 'Media';
+      } else if (['automation', 'activepieces', 'webhook', 'n8n', 'ollama'].some(k => name.includes(k))) {
+        group = 'Automation';
+      } else if (['dockge', 'portainer', 'gitea', 'vaultwarden', 'infragem', 'cloudflared'].some(k => name.includes(k))) {
+        group = 'Core';
+      } else if (['silverbullet', 'stirling', 'actual', 'finance'].some(k => name.includes(k))) {
+        group = 'Ecosystem';
+      } else if (['uptime-kuma', 'grafana', 'prometheus'].some(k => name.includes(k))) {
         group = 'Monitoring';
       }
 
