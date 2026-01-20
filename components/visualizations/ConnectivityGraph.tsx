@@ -1,12 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Server, Database, Cloud, Shield, Activity, Lock, GitBranch } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Server, Database, Cloud, Shield, Activity, Lock, GitBranch, X, Sparkles, Plus, Play, RefreshCw } from "lucide-react";
 import useSWR from "swr";
+import { useState } from "react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-// Type definitions for our graph
 type NodeType = 'core' | 'cloud' | 'db' | 'service' | 'security';
 
 interface Node {
@@ -16,41 +16,46 @@ interface Node {
   x: number;
   y: number;
   icon: any;
-  status: 'online' | 'offline' | 'warning';
-}
-
-interface Edge {
-  from: string;
-  to: string;
-  active: boolean;
-  status?: 'connected' | 'disconnected';
+  status: 'online' | 'offline' | 'healing';
 }
 
 export const ConnectivityGraph = () => {
-  const { data: mesh } = useSWR('/api/system/mesh', fetcher, { refreshInterval: 5000 });
-  
-  // 1. Define Nodes (Topological Layout)
+  const { data: mesh, mutate } = useSWR('/api/system/mesh', fetcher, { refreshInterval: 5000 });
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isHealing, setIsHealing] = useState<string | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+
   const nodes: Node[] = [
-    { id: 'infragem', label: 'InfraGem Core', type: 'core', x: 50, y: 50, icon: Activity, status: 'online' },
-    
-    // Cloud / External
+    { id: 'infragem', label: 'SurasOS Core', type: 'core', x: 50, y: 50, icon: Activity, status: 'online' },
     { id: 'github', label: 'GitHub', type: 'cloud', x: 50, y: 10, icon: Cloud, status: mesh?.infragem?.github === 'connected' ? 'online' : 'offline' },
     { id: 'cloudflare', label: 'Cloudflare', type: 'cloud', x: 80, y: 10, icon: Cloud, status: mesh?.infragem?.cloudflare === 'connected' ? 'online' : 'offline' },
-    
-    // Security / Auth
     { id: 'vault', label: 'Vaultwarden', type: 'security', x: 20, y: 30, icon: Lock, status: mesh?.infragem?.vault === 'connected' ? 'online' : 'offline' },
-    
-    // DevOps
     { id: 'gitea', label: 'Gitea', type: 'service', x: 20, y: 70, icon: GitBranch, status: mesh?.infragem?.gitea === 'connected' ? 'online' : 'offline' },
     { id: 'dockge', label: 'Dockge', type: 'service', x: 80, y: 70, icon: Server, status: mesh?.infragem?.dockge === 'connected' ? 'online' : 'offline' },
-    
-    // Automation
-    { id: 'automation', label: 'Automation', type: 'service', x: 50, y: 90, icon: Server, status: mesh?.infragem?.automation === 'connected' ? 'online' : 'offline' },
-    { id: 'ollama', label: 'Ollama', type: 'service', x: 70, y: 90, icon: Activity, status: mesh?.infragem?.ollama === 'connected' ? 'online' : 'offline' },
-    
-    // Local Home
+    { id: 'automation', label: 'Activepieces', type: 'service', x: 50, y: 90, icon: Server, status: mesh?.infragem?.automation === 'connected' ? 'online' : 'offline' },
+    { id: 'ollama', label: 'Ollama AI', type: 'service', x: 70, y: 90, icon: Sparkles, status: mesh?.infragem?.ollama === 'connected' ? 'online' : 'offline' },
+    { id: 'qdrant', label: 'Vector DB', type: 'db', x: 85, y: 50, icon: Database, status: mesh?.infragem?.qdrant === 'connected' ? 'online' : 'offline' },
     { id: 'home-assistant', label: 'Home Engine', type: 'core', x: 20, y: 90, icon: Activity, status: mesh?.infragem?.['home-assistant'] === 'connected' ? 'online' : 'offline' },
+    
+    // Ghost Nodes (Neural Extensions)
+    { id: 'silverbullet', label: 'AI Wiki', type: 'service', x: 10, y: 10, icon: GitBranch, status: 'offline' },
+    { id: 'stirling', label: 'PDF Lab', type: 'service', x: 10, y: 30, icon: Shield, status: 'offline' },
+    { id: 'actual', label: 'Finance', type: 'service', x: 10, y: 50, icon: Database, status: 'offline' },
   ];
+
+  const handleHeal = async (nodeId: string) => {
+    setIsHealing(nodeId);
+    setAiAnalysis("AI analyzing neural pathways...");
+    try {
+        const res = await fetch(`/api/ai/analyze?container=${nodeId}`);
+        const data = await res.json();
+        setAiAnalysis(data.response || "No critical failures detected in logs.");
+    } catch (e) {
+        setAiAnalysis("Neural link to AI Core failed.");
+    } finally {
+        setIsHealing(null);
+    }
+  };
 
   // 2. Define Connections based on Mesh Data
   // Default to false/disconnected if no data
@@ -59,7 +64,7 @@ export const ConnectivityGraph = () => {
       return mesh[from]?.[to] === 'connected' || mesh[to]?.[from] === 'connected';
   };
 
-  const edges: Edge[] = [
+  const edges = [
     { from: 'github', to: 'infragem', active: isConnected('infragem', 'github') },
     { from: 'infragem', to: 'gitea', active: isConnected('infragem', 'gitea') },
     { from: 'infragem', to: 'dockge', active: isConnected('infragem', 'dockge') },
@@ -68,56 +73,31 @@ export const ConnectivityGraph = () => {
     { from: 'infragem', to: 'automation', active: isConnected('infragem', 'automation') },
     { from: 'infragem', to: 'ollama', active: isConnected('infragem', 'ollama') },
     { from: 'infragem', to: 'home-assistant', active: isConnected('infragem', 'home-assistant') },
+    { from: 'infragem', to: 'qdrant', active: isConnected('infragem', 'qdrant') },
   ];
 
   return (
-    <div className="w-full h-full relative bg-[#020617] overflow-hidden rounded-3xl border border-white/5 shadow-2xl">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#020617] to-[#020617]" />
+    <div className="w-full h-full relative bg-[#020617] overflow-hidden rounded-[40px] border border-white/5 shadow-2xl">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/10 via-[#020617] to-[#020617]" />
       
-      {/* SVG Layer for Connections */}
+      {/* SVG Layer */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
-        <defs>
-          <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#4F46E5" stopOpacity="0" />
-            <stop offset="50%" stopColor="#818CF8" stopOpacity="1" />
-            <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        
         {edges.map((edge, i) => {
           const start = nodes.find(n => n.id === edge.from);
           const end = nodes.find(n => n.id === edge.to);
           if (!start || !end) return null;
-
           return (
             <g key={`${edge.from}-${edge.to}`}>
-              {/* Base Line - Red if inactive, Slate if active but waiting, Greenish if flowing */}
               <line
-                x1={`${start.x}%`}
-                y1={`${start.y}%`}
-                x2={`${end.x}%`}
-                y2={`${end.y}%`}
-                stroke={edge.active ? "#1e293b" : "#450a0a"} 
-                strokeWidth="2"
+                x1={`${start.x}%`} y1={`${start.y}%`} x2={`${end.x}%`} y2={`${end.y}%`}
+                stroke={edge.active ? "#1e293b" : "#450a0a"} strokeWidth="2"
                 strokeDasharray={edge.active ? "0" : "5,5"}
               />
-              
-              {/* Active Data Packet Animation */}
               {edge.active && (
                 <motion.circle
-                  r="3"
-                  fill="#818CF8"
-                  initial={{ offsetDistance: "0%" }}
-                  animate={{ 
-                    cx: [`${start.x}%`, `${end.x}%`],
-                    cy: [`${start.y}%`, `${end.y}%`]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                    delay: i * 0.5
-                  }}
+                  r="2" fill="#818CF8"
+                  animate={{ cx: [`${start.x}%`, `${end.x}%`], cy: [`${start.y}%`, `${end.y}%`] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: i * 0.4 }}
                 />
               )}
             </g>
@@ -125,69 +105,111 @@ export const ConnectivityGraph = () => {
         })}
       </svg>
 
-      {/* Nodes Layer */}
+      {/* Nodes */}
       {nodes.map((node) => {
         const Icon = node.icon;
-        
-        // Dynamic color based on status
-        let colorClass = 'text-slate-400 bg-slate-500/10 border-slate-500/50';
-        if (node.status === 'offline') {
-            colorClass = 'text-red-400 bg-red-500/10 border-red-500/50';
-        } else if (node.type === 'core') {
-            colorClass = 'text-indigo-400 bg-indigo-500/10 border-indigo-500/50';
-        } else if (node.type === 'cloud') {
-            colorClass = 'text-sky-400 bg-sky-500/10 border-sky-500/50';
-        } else if (node.type === 'security') {
-            colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/50';
-        }
+        const isSelected = selectedNode?.id === node.id;
+        const healing = isHealing === node.id;
 
         return (
           <motion.div
             key={node.id}
-            className={`absolute flex flex-col items-center justify-center p-4 rounded-xl border backdrop-blur-sm shadow-xl cursor-pointer ${colorClass}`}
-            style={{ 
-              left: `${node.x}%`, 
-              top: `${node.y}%`,
-              x: "-50%",
-              y: "-50%"
-            }}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            whileHover={{ scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            onClick={() => { setSelectedNode(node); setAiAnalysis(null); }}
+            className={cn(
+              "absolute flex flex-col items-center justify-center p-4 rounded-2xl border backdrop-blur-md transition-all cursor-pointer z-20",
+              node.status === 'offline' ? "text-red-400 bg-red-500/5 border-red-500/20" : "text-indigo-300 bg-white/5 border-white/10",
+              isSelected && "ring-2 ring-indigo-500 border-indigo-500 shadow-[0_0_30px_rgba(79,70,229,0.3)]",
+              healing && "animate-pulse border-purple-500 text-purple-400"
+            )}
+            style={{ left: `${node.x}%`, top: `${node.y}%`, x: "-50%", y: "-50%" }}
+            whileHover={{ scale: 1.05 }}
           >
-            <div className="relative">
-              <Icon className="w-8 h-8 mb-2" />
-              {node.status === 'online' && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-              )}
-              {node.status === 'offline' && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                </span>
-              )}
-            </div>
-            <span className="text-xs font-bold tracking-widest">{node.label}</span>
-            <span className="text-[10px] opacity-60 uppercase">{node.type}</span>
+            <Icon className={cn("w-6 h-6 mb-2", healing && "animate-spin")} />
+            <span className="text-[10px] font-bold tracking-widest uppercase">{node.label}</span>
+            {node.status === 'online' && <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_#10b981]" />}
           </motion.div>
         );
       })}
-      
-      {/* Legend / Status Overlay */}
-      <div className="absolute bottom-8 left-8 bg-black/50 backdrop-blur-md p-4 rounded-xl border border-white/10">
-        <h3 className="text-sm font-bold text-white mb-2">SYSTEM TOPOLOGY</h3>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span>Active Connections</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-            <div className="w-2 h-2 rounded-full bg-red-900 border border-red-500" />
-            <span>Disconnected / Error</span>
+
+      {/* Diagnostics Panel */}
+      <AnimatePresence>
+        {selectedNode && (
+          <motion.div 
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            className="absolute right-6 top-6 bottom-6 w-80 bg-black/80 backdrop-blur-xl border border-white/10 rounded-[32px] p-6 z-50 flex flex-col gap-6 shadow-2xl"
+          >
+            <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold tracking-widest uppercase text-white flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-indigo-400" /> Diagnostics
+                </h3>
+                <button onClick={() => setSelectedNode(null)} className="p-1 hover:bg-white/5 rounded-full transition-colors">
+                    <X className="w-4 h-4 text-gray-500" />
+                </button>
+            </div>
+
+            <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Target</div>
+                    <div className="text-white font-mono text-xs">{selectedNode.label}</div>
+                </div>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                    <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Status</div>
+                    <div className={cn("text-xs font-bold uppercase", selectedNode.status === 'online' ? "text-emerald-400" : "text-red-400")}>
+                        {selectedNode.status}
+                    </div>
+                </div>
+            </div>
+
+            {selectedNode.status === 'offline' && (
+                <button 
+                    onClick={() => handleHeal(selectedNode.id)}
+                    disabled={!!isHealing}
+                    className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] disabled:opacity-50"
+                >
+                    {isHealing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    INITIATE AI REPAIR
+                </button>
+            )}
+
+            {aiAnalysis && (
+                <div className="flex-1 bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-4 overflow-y-auto font-mono text-[10px] leading-relaxed text-indigo-200">
+                    <div className="flex items-center gap-2 mb-2 text-indigo-400 border-b border-indigo-500/20 pb-2">
+                        <Sparkles className="w-3 h-3" /> QWEN INSIGHT
+                    </div>
+                    {aiAnalysis}
+                </div>
+            )}
+
+            <div className="mt-auto grid grid-cols-2 gap-3">
+                <button className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 text-[10px] font-bold text-gray-400 flex items-center justify-center gap-2 transition-all">
+                    <Play className="w-3 h-3" /> RESTART
+                </button>
+                <button className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 text-[10px] font-bold text-gray-400 flex items-center justify-center gap-2 transition-all">
+                    <Terminal className="w-3 h-3" /> LOGS
+                </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Add Button */}
+      <button className="absolute bottom-8 right-8 w-12 h-12 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all active:scale-90 group">
+        <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+      </button>
+
+      {/* Legend */}
+      <div className="absolute bottom-8 left-8 bg-black/40 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5 pointer-events-none">
+        <div className="flex items-center gap-3 text-[9px] font-bold text-gray-500 tracking-widest uppercase">
+            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Healthy</div>
+            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Fractured</div>
         </div>
       </div>
     </div>
   );
 };
+
+function cn(...classes: any[]) {
+  return classes.filter(Boolean).join(' ');
+}
