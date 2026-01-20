@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Server, Database, Cloud, Shield, Activity, Lock, GitBranch, X, Sparkles, Plus, Play, RefreshCw } from "lucide-react";
+import { Server, Database, Cloud, Shield, Activity, Lock, GitBranch, X, Sparkles, Plus, Play, RefreshCw, Terminal } from "lucide-react";
 import useSWR from "swr";
 import { useState } from "react";
 
