@@ -57,7 +57,7 @@ export function ServiceDeck({ filter = "" }: ServiceDeckProps) {
                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-text-muted">{group}</h4>
                     <div className="h-px bg-border flex-1"></div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
                     {grouped[group].map((service) => (
                     <ServiceCard key={service.id} service={service} />
                     ))}

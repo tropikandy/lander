@@ -1,12 +1,30 @@
+'use client';
+
 import { ServiceStatus } from '@/lib/types/services';
 import { cn } from '@/lib/utils';
-import { Activity, AlertCircle, CheckCircle2, PauseCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Activity, AlertCircle, Sparkles, Loader2, ExternalLink, ShieldCheck, Zap, Database, Globe } from 'lucide-react';
 import { useState } from 'react';
+
+const BRAND_COLORS: Record<string, string> = {
+    'plex': 'from-amber-500/20 to-amber-600/5 text-amber-400 border-amber-500/20',
+    'gitea': 'from-emerald-500/20 to-emerald-600/5 text-emerald-400 border-emerald-500/20',
+    'vaultwarden': 'from-blue-500/20 to-blue-600/5 text-blue-400 border-blue-500/20',
+    'infragem': 'from-indigo-500/20 to-indigo-600/5 text-indigo-400 border-indigo-500/20',
+    'activepieces': 'from-pink-500/20 to-pink-600/5 text-pink-400 border-pink-500/20',
+    'silverbullet': 'from-sky-500/20 to-sky-600/5 text-sky-400 border-sky-500/20',
+    'stirling-pdf': 'from-purple-500/20 to-purple-600/5 text-purple-400 border-purple-500/20',
+    'actual-budget': 'from-cyan-500/20 to-cyan-600/5 text-cyan-400 border-cyan-500/20',
+    'ollama': 'from-violet-500/20 to-violet-600/5 text-violet-400 border-violet-500/20',
+    'home-assistant': 'from-blue-400/20 to-blue-500/5 text-blue-300 border-blue-400/20',
+};
+
+const DEFAULT_COLOR = 'from-slate-500/10 to-slate-600/5 text-slate-400 border-white/10';
 
 export function ServiceCard({ service }: { service: ServiceStatus }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAIInsight = async (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     setIsAnalyzing(true);
     try {
@@ -36,50 +54,80 @@ export function ServiceCard({ service }: { service: ServiceStatus }) {
     return `https://${domain}`;
   };
 
-  const statusColor = {
-    running: 'text-emerald-400',
-    stopped: 'text-slate-500',
-    error: 'text-red-400',
-  }[service.status] || 'text-slate-400';
+  const brandStyle = BRAND_COLORS[service.name.toLowerCase()] || DEFAULT_COLOR;
+  const isRunning = service.status === 'running';
 
   return (
-    <div className="group flex items-center justify-between p-3 rounded-lg hover:bg-slate-800/50 transition-all duration-200 border border-transparent hover:border-white/5 cursor-default relative overflow-hidden">
-      <div className="flex items-center gap-3">
+    <div className={cn(
+        "group relative flex flex-col p-5 rounded-3xl border transition-all duration-500 bg-gradient-to-br hover:shadow-[0_0_40px_rgba(0,0,0,0.3)] hover:-translate-y-1 overflow-hidden",
+        brandStyle,
+        !isRunning && "grayscale opacity-80"
+    )}>
+      {/* Background Decorative Blur */}
+      <div className="absolute -top-12 -right-12 w-24 h-24 bg-current opacity-[0.03] rounded-full blur-2xl group-hover:opacity-[0.08] transition-opacity" />
+
+      {/* Top Header: Icon & Status */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="p-2.5 rounded-2xl bg-black/20 border border-white/5 shadow-inner">
+            <Zap className="w-5 h-5" />
+        </div>
+        
         <div className={cn(
-            "w-1.5 h-1.5 rounded-full transition-colors",
-            service.status === 'running' ? "bg-emerald-500/50" : "bg-slate-700"
-        )}></div>
-        <div>
-          <a 
-            href={getServiceUrl(service.name)} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors capitalize hover:underline underline-offset-4 decoration-primary/50"
-          >
-            {service.name}
-          </a>
-          <div className="text-[10px] text-slate-500 font-mono opacity-0 group-hover:opacity-100 transition-opacity -translate-y-1 group-hover:translate-y-0 duration-300">
-             {service.uptime ? `Uptime: ${service.uptime}` : 'Offline'}
-          </div>
+            "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-tighter uppercase border backdrop-blur-md",
+            isRunning ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"
+        )}>
+            {isRunning ? (
+                <>
+                    <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    LIVE
+                </>
+            ) : (
+                <>
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                    OFFLINE
+                </>
+            )}
         </div>
       </div>
-      
-      <div className="flex items-center gap-2">
-        <button 
-            onClick={handleAIInsight}
-            disabled={isAnalyzing}
-            className={cn(
-                "p-1.5 rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 transition-all opacity-0 group-hover:opacity-100",
-                isAnalyzing && "animate-pulse opacity-100",
-                service.status === 'error' && "opacity-100 bg-red-500/10 text-red-400"
-            )}
-            title="Get AI Insight"
-        >
-            {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-        </button>
 
-        <div className={cn("text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full bg-slate-900 border border-white/5", statusColor)}>
-            {service.status}
+      {/* Center: Title & Image */}
+      <div className="flex-1 space-y-1">
+        <h3 className="text-lg font-bold tracking-tight text-white group-hover:text-current transition-colors">
+            {service.name.replace(/-/g, ' ')}
+        </h3>
+        <p className="text-[10px] font-mono opacity-50 truncate max-w-[180px]">
+            {service.image.split('/').pop()}
+        </p>
+      </div>
+
+      {/* Bottom Actions */}
+      <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-1 text-[10px] font-medium opacity-40">
+            <Activity className="w-3 h-3" />
+            {service.uptime || '---'}
+        </div>
+
+        <div className="flex items-center gap-2">
+            <button 
+                onClick={handleAIInsight}
+                disabled={isAnalyzing}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all disabled:opacity-50"
+                title="Neural Analysis"
+            >
+                {isAnalyzing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            </button>
+            
+            <a 
+                href={getServiceUrl(service.name)}
+                target="_blank"
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                title="Launch Instance"
+            >
+                <ExternalLink className="w-3.5 h-3.5" />
+            </a>
         </div>
       </div>
     </div>
